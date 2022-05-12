@@ -1,0 +1,28 @@
+[
+  {
+    "id": "server",
+    "execute-command": "/opt/webhook/s.sh",
+    "command-working-directory": "/opt/webhook/sh",
+    "pass-arguments-to-command":
+    [
+	{"source": "url", "name": "commit"},
+	{"source": "url", "name": "lastip"},
+	{"source": "url", "name": "lasttime"},
+	{"source": "url", "name": "port"},
+	{"source": "url", "name": "ip"}
+    ],
+    "trigger-rule":
+    {
+      "match":
+      {
+        "type": "value",
+        "value": "MNdjh13s23sd",
+        "parameter":
+          {
+            "source": "url",
+            "name": "token"
+          }
+      }
+    }
+  }
+]
