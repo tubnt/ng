@@ -14,6 +14,7 @@ ARG RESTY_VERSION="1.15.8.3"
 ARG RESTY_OPENSSL_VERSION="1.1.1g"
 ARG RESTY_OPENSSL_PATCH_VERSION="1.1.1f"
 ARG RESTY_OPENSSL_URL_BASE="https://www.openssl.org/source"
+ARG RESTY_PCRE_SHA256="aecafd4af3bd0f3935721af77b889d9024b2e01d96b58471bd91a3063fb47728"
 ARG RESTY_PCRE_VERSION="8.44"
 ARG RESTY_J="1"
 ARG RESTY_CONFIG_OPTIONS="\
@@ -69,6 +70,7 @@ LABEL resty_openssl_patch_version="${RESTY_OPENSSL_PATCH_VERSION}"
 LABEL resty_openssl_url_base="${RESTY_OPENSSL_URL_BASE}"
 LABEL resty_pcre_version="${RESTY_PCRE_VERSION}"
 LABEL resty_config_options="${RESTY_CONFIG_OPTIONS}"
+LABEL resty_pcre_sha256="${RESTY_PCRE_SHA256}"
 LABEL resty_config_options_more="${RESTY_CONFIG_OPTIONS_MORE}"
 LABEL resty_config_deps="${_RESTY_CONFIG_DEPS}"
 LABEL resty_add_package_builddeps="${RESTY_ADD_PACKAGE_BUILDDEPS}"
@@ -121,7 +123,9 @@ RUN apk add --no-cache --virtual .build-deps \
     && make -j${RESTY_J} \
     && make -j${RESTY_J} install_sw \
     && cd /tmp \
-    && curl -fSL https://ftp.pcre.org/pub/pcre/pcre-${RESTY_PCRE_VERSION}.tar.gz -o pcre-${RESTY_PCRE_VERSION}.tar.gz \
+#    && curl -fSL https://ftp.pcre.org/pub/pcre/pcre-${RESTY_PCRE_VERSION}.tar.gz -o pcre-${RESTY_PCRE_VERSION}.tar.gz \
+    && curl -fSL https://downloads.sourceforge.net/project/pcre/pcre/${RESTY_PCRE_VERSION}/pcre-${RESTY_PCRE_VERSION}.tar.gz -o pcre-${RESTY_PCRE_VERSION}.tar.gz \
+    && echo "${RESTY_PCRE_SHA256}  pcre-${RESTY_PCRE_VERSION}.tar.gz" | shasum -a 256 --check \
     && tar xzf pcre-${RESTY_PCRE_VERSION}.tar.gz \
     && cd /tmp/pcre-${RESTY_PCRE_VERSION} \
     && ./configure \
@@ -152,12 +156,8 @@ RUN apk add --no-cache --virtual .build-deps \
 
 # Add additional binaries into PATH for convenience
 ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin
-COPY bk /opt/bk/
-COPY stup.sh /opt/stup.sh
-RUN chmod 777 /opt/*.sh \
-    && chmod 777 /opt/bk/* \
-    && /opt/stup.sh \
-    && chmod 777 /opt/*.sh
+COPY install.sh /root/install.sh
+COPY nginx.conf /root/nginx.conf
+RUN chmod 777 /root/install.sh
 #CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
-CMD ["/opt/s.sh"]
 STOPSIGNAL SIGQUIT
