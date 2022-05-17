@@ -158,6 +158,9 @@ RUN apk add --no-cache --virtual .build-deps \
 ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin
 COPY install.sh /root/install.sh
 COPY nginx.conf /root/nginx.conf
-RUN chmod 777 /root/install.sh
+COPY nginxphp.conf /root/nginxphp.conf
+COPY start.sh /root/start.sh
+COPY autocert.sh /root/autocert.sh
+RUN chmod 777 /root/*.sh
 #CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
 STOPSIGNAL SIGQUIT
