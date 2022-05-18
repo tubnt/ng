@@ -160,7 +160,6 @@ COPY install.sh /root/install.sh
 COPY nginx.conf /root/nginx.conf
 COPY nginxphp.conf /root/nginxphp.conf
 COPY start.sh /root/start.sh
-COPY autocert.sh /root/autocert.sh
 RUN chmod 777 /root/*.sh
 #CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
 STOPSIGNAL SIGQUIT
