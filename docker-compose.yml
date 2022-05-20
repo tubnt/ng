@@ -1,0 +1,30 @@
+web:
+    container_name: "web${web_version}"
+    image: "web:v${web_version}"
+    ports:
+      - "${APP_PORT}:80"
+      - "${APP_PORT_SSL}:443"
+      - "${PHPMYADMIN_PORT}:443"
+      #- "33066:3306" # mysql ports value
+    volumes:
+      - ./web/nginx:/usr/local/openresty/nginx
+      - ./web/mysql/bak:/etc/mysql/bak
+      - ./web/mysql:/var/lib/mysql/
+      - ./web/my.cnf:/etc/my.cnf
+      - ./web/php:/etc/php7
+      - ./web/phpmyadmin:/usr/local/phpmyadmin
+      - ./web/redis.conf:/etc/redis.conf
+    environment:
+      TZ: "Asia/Shanghai"
+    networks:
+      extnetwork:
+        ipv4_address: 172.111.111.2
+    restart: unless-stopped
+
+networks:
+  extnetwork:
+    name: "web-networks-${web_version}"
+    ipam:
+      config:
+        - subnet: 172.111.111.0/16
+          gateway: 172.111.111.1
