@@ -1,0 +1,10 @@
+alpine-baselayout
+alpine-keys
+apk-tools
+busybox
+gd
+geoip
+libc-utils
+libgcc
+libxslt
+zlib

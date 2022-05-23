@@ -95,38 +95,38 @@ rm -rf /root/nginx.conf
 }
 
 
-echo -e "执行本脚本默认将配置nginx与lua环境,并可选装mysql、redis、php、phpmyadmin、cerbot"
-read  -p  "是否安装mysql(/n,直接回车为Y): " mysql
-read  -p  "是否安装redis(y/n,直接回车为Y): " redis
-read  -p  "是否安装php(y/n,直接回车为Y): " php
-read  -p  "是否安装phpmyadmin(y/n,直接回车为Y): " phpmyadmin
-read  -p  "是否安装自动证书工具(y/n,直接回车为Y): " autocertificate
+echo -e "安装将默认配置nginx与lua环境,并可选装mysql、redis、php、phpmyadmin、cerbot"
+read  -p  "是否安装mysql(Y/n,默认回车为Y): " mysql
+read  -p  "是否安装redis(Y/n,默认回车为Y): " redis
+read  -p  "是否安装php(Y/n,默认回车为Y): " php
+read  -p  "是否安装phpmyadmin(Y/n,默认回车为Y): " phpmyadmin
+read  -p  "是否安装自动证书工具(Y/n,默认回车为Y): " autocertificate
 
 echo -e "正在安装nginx..."
 nginxluainstall
 
 
-if [[ "${mysql}" == "y" ]] ||  [[ "${mysql}" == "Y" ]] ||  [[ "${mysal}" == "" ]]; then
+if [[ "${mysql}" == "y" ]] || [[ "${mysql}" == "Y" ]] || [[ "${mysal}" == "" ]]; then
     echo -e "正在安装mysql..."
     mysqlinstall
 fi
 
-if [[ "${redis}" == "y" ]] ||  [[ "${mysql}" == "Y" ]] ||  [[ "${redis}" == "" ]]; then
+if [[ "${redis}" == "y" ]] || [[ "${mysql}" == "Y" ]] || [[ "${redis}" == "" ]]; then
     echo -e "正在安装redis..."
     redisinstall
 fi
 
-if [[ "${php}" == "y" ]] ||  [[ "${php}" == "Y" ]] ||  [[ "${php}" == "" ]]; then
+if [[ "${php}" == "y" ]] || [[ "${php}" == "Y" ]] || [[ "${php}" == "" ]]; then
     echo -e "正在安装php..."
     phpinstall
 fi
 
-if [[ "${phpmyadmin}" == "y" ]] ||  [[ "${phpmyadmin}" == "Y" ]] ||  [[ "${phpmyadmin}" == "" ]]; then
+if [[ "${phpmyadmin}" == "y" ]] || [[ "${phpmyadmin}" == "Y" ]] || [[ "${phpmyadmin}" == "" ]]; then
     echo -e "正在安装phpmyadmin..."
     phpmyadmininstall
 fi
 
-if [[ "${autocertificate}" == "y" ]] ||  [[ "${autocertificate}" == "Y" ]] ||  [[ "${autocertificate}" == "" ]]; then
+if [[ "${autocertificate}" == "y" ]] || [[ "${autocertificate}" == "Y" ]] || [[ "${autocertificate}" == "" ]]; then
     echo -e "正在安装自动证书..."
     autocertificateinstall
 fi
@@ -142,42 +142,33 @@ if [[ "${mysql}" == "y" ]] ||  [[ "${mysql}" == "Y" ]] ||  [[ "${mysal}" == "" ]
     echo  "mysql、redis密码位于: $nginxsetup"
     echo '#####mysql
     psmysql=`ps -a | grep "mysql" | grep -v "grep"`
-    if [[ "$psmysql" != "" ]]
+    if [[ "$psmysql" = "" ]]
     then
-        echo "mysql 已在运行中"
-    else
-        echo "mysql 启动中..."
         /usr/share/mariadb/mysql.server start
-        echo "mysql 启动完毕"
     fi' >> /root/start.sh
+    echo 'killall mysqld' >> /root/stopd.sh
 fi
 
 if [[ "${redis}" == "y" ]] ||  [[ "${mysql}" == "Y" ]] ||  [[ "${redis}" == "" ]]; then
     echo  "redis工作目录: $redisworkdir"
     echo '####redis
     psredis=`ps -a | grep redis-server | grep -v grep`
-    if [[ "$psredis" != "" ]]
+    if [[ "$psredis" = "" ]]
     then
-        echo "redis 已在运行中"
-    else
-        echo "redis 启动中..."
         nohup /usr/bin/redis-server /etc/redis.conf  2>&1 &
-        echo "redis 启动完毕" 
     fi' >> /root/start.sh
+    echo 'kill -9  `ps -a |grep redis.conf |grep -v grep |awk '{print $1}'`' >> /root/stopd.sh
 fi
 
 if [[ "${php}" == "y" ]] ||  [[ "${php}" == "Y" ]] ||  [[ "${php}" == "" ]]; then
     echo  "php工作目录: $phpworkdir"
     echo '#####php-fpm7
     psphpfpm7=`ps -a | grep "php-fpm7" | grep -v "grep"`
-    if [[ "$psphpfpm7" != "" ]]
+    if [[ "$psphpfpm7" = "" ]]
     then
-        echo "php 已在运行中"
-    else
-        echo "php 启动中..."
         /usr/sbin/php-fpm7
-        echo "php 启动完毕"
     fi' >> /root/start.sh
+    echo ' killall php-fpm7' >> /root/stopd.sh
 fi
 
 if [[ "${phpmyadmin}" == "y" ]] ||  [[ "${phpmyadmin}" == "Y" ]] ||  [[ "${phpmyadmin}" == "" ]]; then
