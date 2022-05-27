@@ -49,22 +49,23 @@ judge() {
     fi
 }
 webinstall() {
-            read  -n1 -e -p  "是否暴露数据库端口(Y/n,默认回车为Y): " mysqlport
+            read  -n1 -e -r -p  "是否暴露数据库端口(Y/n,默认回车为Y): " mysqlport
             if [[ "${mysqlport}" == "y" ]] ||  [[ "${mysqlport}" == "Y" ]] || [[ "${mysalport}" == "" ]]; then
 			    sed -i "/# mysql ports value/c\      - \"33066:3306\" # mysql ports value" docker-compose.yml
             fi
-            read  -n1 -e -p  "是否暴露phpmyadmin端口(Y/n,默认回车为Y): " phpmyadminport
+            read  -n1 -e -r -p  "是否暴露phpmyadmin端口(Y/n,默认回车为Y): " phpmyadminport
             if [[ "${phpmyadminport}" == "y" ]] ||  [[ "${phpmyadminport}" == "Y" ]] || [[ "${phpmyadminport}" == "" ]]; then
                             sed -i "/# phpmyadmin ports value/c\      - \"3000:3000\" # phpmyadmin ports value" docker-compose.yml
             fi
             docker-compose up -d
 	    docker-compose exec -u root  web /bin/sh -c 'pwd  && sh  /root/install.sh'
     	    mysqlpasswd=`docker-compose exec web /bin/sh -c "grep mysqlpasswd /root/nginxsetup.log | cut -d' ' -f2"`
+	    servciestart
 	    echo""
             echo -e "${OK} ${GreenBG} mysql端口开启成功：http://localhost:33066 ${Font}"
+    	    echo -e "${OK} ${GreenBG} 数据库root密码: $mysqlpasswd  ${Font}"
             echo -e "${OK} ${GreenBG} phpmyadmin端口开启成功：http://localhost:3000 ${Font}"
             echo -e "${OK} ${GreenBG} 欢迎访问：http://localhost ${Font}"
-    	    echo -e "${OK} ${GreenBG} 数据库root密码: $mysqlpasswd  ${Font}"
 }
 
 ssl_judge_and_install() {
@@ -94,6 +95,7 @@ ssl_judge_and_install() {
     else
         ssl_install
         acme
+	acme_cron_update
     fi
 
     cat >${ssl_dir_path}/ssl.conf <<EOF
@@ -153,6 +155,27 @@ acme() {
         rm -rf "$HOME/.acme.sh/${domain}_ecc"
         exit 1
     fi
+}
+
+acme_cron_update() {
+    ssl_update_file="$ssl_dir_path/update.sh"
+    cat >$ssl_update_file <<EOF
+#!/usr/bin/env bash
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+"/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" &> /dev/null
+"/root/.acme.sh"/acme.sh --installcert -d ${domain} --fullchainpath ${ssl_dir_path}/web.crt --keypath ${ssl_dir_path}/web.key --ecc
+EOF
+    chmod +x $ssl_update_file
+    if [[ $(crontab -l | grep -c "update.sh") -lt 1 ]]; then
+      if [[ "${ID}" == "centos" ]]; then
+          sed -i "/acme.sh/c 0 3 * * 0 bash ${ssl_update_file}" /var/spool/cron/root
+      else
+          sed -i "/acme.sh/c 0 3 * * 0 bash ${ssl_update_file}" /var/spool/cron/crontabs/root
+      fi
+    fi
+    judge "安装证书自动更新 "
 }
 
 servciestart() {
@@ -223,6 +246,11 @@ uninstall_start() {
     rm -rf "$www_dir_path/docker-compose.yml"
     cp -rf  $www_dir_path/.web $www_dir_path/web
     cp -rf  $www_dir_path/.docker-compose.yml $www_dir_path/docker-compose.yml
+    if [[ "${ID}" == "centos" ]]; then
+        sed -i '/'update.sh'/d' /var/spool/cron/root
+    else
+        sed -i '/'update.sh'/d' /var/spool/cron/crontabs/root
+    fi
     echo -e "${OK} ${GreenBG} 卸载完成 ${Font}"
 }
 
